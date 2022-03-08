@@ -27,6 +27,7 @@ namespace HideTaskbarOnApplications
         public static readonly string CurrentProgramPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
         public static readonly string NewProgramPath = Path.Combine(AppDataDir, Path.GetFileName(CurrentProgramPath));
         public static readonly bool RunningInstallation = CurrentProgramPath == NewProgramPath;
+        public static JObject ConfigData;
 
         static bool runningSilently = false;
 
@@ -58,7 +59,7 @@ namespace HideTaskbarOnApplications
             }
             else
             {
-                JObject ConfigData;
+                
                 using (var outStream = new StreamReader(new FileStream(ConfigFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)))
                 {
                     ConfigData = JObject.Parse(outStream.ReadToEnd());
@@ -82,12 +83,13 @@ namespace HideTaskbarOnApplications
                                 {
                                     Icon = Resource.Icon,
                                     ContextMenu = menu,
-                                    Text = "Main"
+                                    Text = AppName
                                 };
-                                mnuOpen.Click += new EventHandler((object sender, EventArgs e) => { /*TODO: Show control panel */ });
+                                mnuOpen.Click += new EventHandler((object sender, EventArgs e) => { ShowControlPanel(); });
                                 mnuExit.Click += new EventHandler((object sender, EventArgs e)=> { Environment.Exit(0); });
 
                                 notificationIcon.Visible = true;
+                                Application.EnableVisualStyles();
                                 Application.Run();
                             }
                         );
@@ -143,6 +145,19 @@ namespace HideTaskbarOnApplications
                             break;
                     }
                 }
+            }
+        }
+
+        static void ShowControlPanel()
+        {
+            var controlPanel = Application.OpenForms.OfType<ControlPanel>().FirstOrDefault();
+            if (controlPanel != null)
+            {
+                controlPanel.Activate();
+            }
+            else
+            {
+                new ControlPanel(ConfigData["Programs"].ToObject<string[]>()).Show();
             }
         }
     }
