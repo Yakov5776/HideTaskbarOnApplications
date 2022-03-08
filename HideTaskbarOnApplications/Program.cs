@@ -1,16 +1,25 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Runtime.InteropServices;
 
 namespace HideTaskbarOnApplications
 {
     internal class Program
     {
+        [DllImport("Kernel32.dll")]
+        private static extern IntPtr GetConsoleWindow();
+        [DllImport("User32.dll")]
+        private static extern bool ShowWindow(IntPtr hWnd, int cmdShow);
+
         public const string AppName = "HideTaskbarOnApplications";
         public const double Revision = 0.1;
         public static readonly string AppDataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), AppName);
@@ -58,7 +67,38 @@ namespace HideTaskbarOnApplications
                 double ConfigRevision = ConfigData["Revision"].ToObject<double>();
                 if (RunningInstallation)
                 {
-                    // TODO: Show control panel and run silent (if not running) or run just silently if ran from startup (determined from args)
+                    if (runningSilently)
+                    {
+                        Thread notifyThread = new Thread(
+                            delegate()
+                            {
+                                ContextMenu menu = new ContextMenu();
+                                MenuItem mnuOpen = new MenuItem("Manage Windows");
+                                MenuItem mnuExit = new MenuItem("Exit");
+                                menu.MenuItems.Add(0, mnuOpen);
+                                menu.MenuItems.Add(1, mnuExit);
+
+                                NotifyIcon notificationIcon = new NotifyIcon()
+                                {
+                                    Icon = Resource.Icon,
+                                    ContextMenu = menu,
+                                    Text = "Main"
+                                };
+                                mnuOpen.Click += new EventHandler((object sender, EventArgs e) => { /*TODO: Show control panel */ });
+                                mnuExit.Click += new EventHandler((object sender, EventArgs e)=> { Environment.Exit(0); });
+
+                                notificationIcon.Visible = true;
+                                Application.Run();
+                            }
+                        );
+
+                        notifyThread.Start();
+                        ShowWindow(GetConsoleWindow(), 0); //TODO: feels like a bit of a hack and may not be robust (?)
+                    }
+                    else
+                    {
+                        //TODO: Show control panel & make sure silent process is running (via mutex?)
+                    }
                 }
                 else
                 {
