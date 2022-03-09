@@ -73,6 +73,8 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="ILMergeOrder.txt" />
+    <None Include="Resources\MoveDown.png" />
+    <None Include="Resources\MoveUp.png" />
     <None Include="Resources\Delete.png" />
     <None Include="Resources\NewWindow.png" />
     <None Include="Resources\Icon.ico" />

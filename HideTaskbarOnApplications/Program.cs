@@ -44,13 +44,7 @@ namespace HideTaskbarOnApplications
                 if (!Directory.Exists(AppDataDir)) Directory.CreateDirectory(AppDataDir);
 
                 JObject ConfigData = new JObject(new JProperty("Revision", Revision), new JProperty("Programs", new string[] { }));
-
-                using (var inStream = new FileStream(ConfigFile, FileMode.Open, FileAccess.Write, FileShare.ReadWrite))
-                {
-                    string ConfigStr = ConfigData.ToString();
-                    inStream.SetLength(0);
-                    inStream.Write(new UTF8Encoding(true).GetBytes(ConfigStr), 0, ConfigStr.Length);
-                }
+                UpdateConfig(ConfigData);
 
                 File.Copy(CurrentProgramPath, NewProgramPath, true);
                 //TODO: create startup entry
@@ -85,6 +79,7 @@ namespace HideTaskbarOnApplications
                                     ContextMenu = menu,
                                     Text = AppName
                                 };
+                                notificationIcon.DoubleClick += new EventHandler((object sender, EventArgs e) => { ShowControlPanel(); });
                                 mnuOpen.Click += new EventHandler((object sender, EventArgs e) => { ShowControlPanel(); });
                                 mnuExit.Click += new EventHandler((object sender, EventArgs e)=> { Environment.Exit(0); });
 
@@ -117,12 +112,7 @@ namespace HideTaskbarOnApplications
                         }
 
                         ConfigData["Revision"] = Revision;
-                        using (var inStream = new FileStream(ConfigFile, FileMode.Open, FileAccess.Write, FileShare.ReadWrite))
-                        {
-                            string ConfigStr = ConfigData.ToString();
-                            inStream.SetLength(0);
-                            inStream.Write(new UTF8Encoding(true).GetBytes(ConfigStr), 0, ConfigStr.Length);
-                        }
+                        UpdateConfig(ConfigData);
                         File.Copy(CurrentProgramPath, NewProgramPath, true);
                     }
 
@@ -158,6 +148,16 @@ namespace HideTaskbarOnApplications
             else
             {
                 new ControlPanel(ConfigData["Programs"].ToObject<string[]>()).Show();
+            }
+        }
+
+        public static void UpdateConfig(JObject ConfigData)
+        {
+            using (var inStream = new FileStream(ConfigFile, FileMode.Open, FileAccess.Write, FileShare.ReadWrite))
+            {
+                string ConfigStr = ConfigData.ToString();
+                inStream.SetLength(0);
+                inStream.Write(new UTF8Encoding(true).GetBytes(ConfigStr), 0, ConfigStr.Length);
             }
         }
     }
